@@ -1,6 +1,10 @@
-const router = require("express").Router();
+// user router
 
-// POST /auth/login
-router.post("/auth/login");
+const router = require("express").Router();
+const userController = require("../controllers/userController");
+
+// baseURL: /TASK/
+router.post("/auth/login", userController.login);
+router.post("/auth/signup", userController.signup);
 
 module.exports = router;

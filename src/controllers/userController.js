@@ -2,6 +2,7 @@
 
 const User = require("../models/userModel");
 const bcrypt = require("bcrypt");
+const middlewareConfig = require("../../config/middlewareConfig");
 
 exports.login = async (req, res) => {
     const { username, password } = req.body;
@@ -14,15 +15,17 @@ exports.login = async (req, res) => {
                 message: "User not found",
             });
         }
-        if (bcrypt.compareSync(password, existingUser.password)) {
-            return res.status(401).send({
+        if (!bcrypt.compareSync(password, existingUser.password)) {
+            return res.status(403).send({
                 error: "Unauthorized",
                 message: "Incorrect password",
             });
         }
+        const token = middlewareConfig.generateToken(existingUser._id);
         res.status(200).send({
             status: "success",
-            message: existingUser,
+            message: "Login successfully",
+            token: token,
         });
     } catch (error) {
         return res.status(401).json({
@@ -46,14 +49,12 @@ exports.signup = async (req, res) => {
             });
         }
 
-        // Create a new user
         const newUser = await User.create({
             username,
             password: bcrypt.hashSync(password, 10),
         });
 
-        // Return success response
-        res.status(200).json({
+        res.status(200).send({
             status: "success",
             message: "User created successfully",
             user: {
@@ -64,9 +65,8 @@ exports.signup = async (req, res) => {
     } catch (error) {
         console.error("Signup error:", error.message);
 
-        // Handle different error scenarios
         if (error.name === "ValidationError") {
-            return res.status(400).json({
+            return res.status(400).send({
                 status: "error",
                 message: "Validation error",
                 errors: error.errors,
